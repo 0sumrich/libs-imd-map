@@ -8,6 +8,9 @@
     <title>Barnet Libraries and LSOAs within 1km in lowest 20th percentile</title>
     <script src='https://api.mapbox.com/mapbox-gl-js/v2.2.0/mapbox-gl.js'></script>
     <link href='https://api.mapbox.com/mapbox-gl-js/v2.2.0/mapbox-gl.css' rel='stylesheet' />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
     <style>
         body {
             margin: 0;
@@ -26,6 +29,18 @@
 <body>
     <div id="map"></div>
     <script>
+        const makeTable = records => {
+            const tHead = `
+            <thead>
+                <tr>
+                    <th>Variable</th>
+                    <th>Decile</th>
+                </tr>
+            </thead>
+            `
+            const tbody = `<tbody>${records.map(({ variable, value }) => `<tr><td>${variable}</td><td>${value}</td></tr>`)}</tbody>`
+            return `<table>${tHead}${tbody}</table>`.replaceAll(',', '')
+        }
         mapboxgl.accessToken = 'pk.eyJ1IjoiMHN1bXJpY2giLCJhIjoiY2s0ZWh6ZWkzMGN5YTNlbzdmbGQybmd0YyJ9.EnAACiaJim37TfLDFGOmUQ';
         const map = new mapboxgl.Map({
             container: 'map',
@@ -42,7 +57,30 @@
             ]
         ]
         map.fitBounds(bbox, { padding: 50 })
-        debugger
+        const lsoaLayerId = 'lsoa-data'
+        const popup = new mapboxgl.Popup({
+            closeButton: false,
+            closeOnClick: false
+        });
+        map.on('mousemove', lsoaLayerId, e => {
+            map.getCanvas().style.cursor = 'pointer';
+
+            const coordinates = e.lngLat;
+            const props = e.features[0].properties
+            const record = JSON.parse(props.record)
+            const html = makeTable(record);
+            
+            while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+                coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+            }
+
+            popup.setLngLat(coordinates).setHTML(html).addTo(map)
+        })
+
+        map.on('mouseleave', lsoaLayerId, () => {
+            map.getCanvas().style.cursor = '';
+            popup.remove();
+        });
     </script>
 </body>
 
