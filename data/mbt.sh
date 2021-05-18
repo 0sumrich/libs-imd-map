@@ -1,0 +1,1 @@
+tippecanoe -zg -o imd-map.mbtiles --drop-densest-as-needed data.json
