@@ -9,6 +9,7 @@
     <script src='https://api.mapbox.com/mapbox-gl-js/v2.2.0/mapbox-gl.js'></script>
     <link href='https://api.mapbox.com/mapbox-gl-js/v2.2.0/mapbox-gl.css' rel='stylesheet' />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 
     <style>
@@ -23,11 +24,33 @@
             bottom: 0;
             width: 100%;
         }
+
+        #info {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+        }
+
+        .material-icons {
+            cursor: pointer;
+        }
+
+        table {
+            font-size: x-small
+        }
     </style>
 </head>
 
 <body>
     <div id="map"></div>
+    <div id="info" class='hide'>
+        <div class='card'>
+            <div class='card-content'>
+                <div class='row'><i class="tiny material-icons right" id='close-info'>close</i></div>
+                <div class='row' id='info-content'></div>
+            </div>
+        </div>
+    </div>
     <script>
         async function main() {
             const libsHtml = await fetch('data/libraries-html-table.json').then(res => res.json())
@@ -61,15 +84,14 @@
                 ]
             ]
             map.fitBounds(bbox, { padding: 50 })
-            const lsoaLayerId = 'lsoa-data'
+            const lsoaLayerId = 'data'
             const popup = new mapboxgl.Popup({
                 closeButton: false,
-                closeOnClick: false
+                closeOnClick: false,
+                achor: 'right'
             });
-            const libPopup = new mapboxgl.Popup({
-                closeButton: true,
-                closeOnClick: true
-            });
+            const infoId = '#info-content'
+            const infoContent = document.querySelector(infoId)
             map.on('mousemove', lsoaLayerId, e => {
                 map.getCanvas().style.cursor = '';
 
@@ -92,20 +114,29 @@
             map.on('mousemove', 'libraries-3aqqy5', e => {
                 map.getCanvas().style.cursor = 'pointer'
                 popup.remove()
-                const coordinates = e.lngLat;
+            })
+            map.on('click', 'libraries-3aqqy5', e => {
+                map.getCanvas().style.cursor = 'pointer'
                 const lib = e.features[0].properties.library
+                document.querySelector('#info').classList.remove('hide')
+                const infoContent = document.querySelector('#info-content')
                 const html = libsHtml[lib]
-                while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-                    coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-                }
-
-                popup.setLngLat(coordinates).setHTML(html).addTo(map)
+                const title = `<h4>${lib}</h4>`
+                infoContent.insertAdjacentHTML('beforeend', title)
+                infoContent.insertAdjacentHTML('beforeend', html);
             })
 
-            map.on('leave', 'libraries-3aqqy5', () => {
+            map.on('mouseleave', 'libraries-3aqqy5', () => {
                 map.getCanvas().style.cursor = ''
-                libPopup.remove()
             })
+
+            document.getElementById('close-info').onclick = () => {
+                document.getElementById('info').classList.add('hide')
+                const infoContent = document.querySelector('#info-content')
+                for (child of Array.from(infoContent.children)){
+                    infoContent.removeChild(child)
+                }
+            }
         }
         main()
     </script>
