@@ -36,7 +36,12 @@
         }
 
         table {
-            font-size: x-small
+            font-size: x-small;
+        }
+        .material-tooltip {
+            max-width: 350px !important;
+            text-align: justify;
+            font-size: x-small;
         }
     </style>
 </head>
@@ -52,6 +57,10 @@
         </div>
     </div>
     <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var elems = document.querySelectorAll('.tooltipped');
+            var instances = M.Tooltip.init(elems, {});
+        });
         async function main() {
             const libsHtml = await fetch('data/libraries-html-table.json').then(res => res.json())
             const makeTable = records => {
@@ -124,6 +133,8 @@
                 const title = `<h4>${lib}</h4>`
                 infoContent.insertAdjacentHTML('beforeend', title)
                 infoContent.insertAdjacentHTML('beforeend', html);
+                const elems = document.querySelectorAll('.tooltipped');
+                M.Tooltip.init(elems, {});
             })
 
             map.on('mouseleave', 'libraries-3aqqy5', () => {
@@ -133,7 +144,7 @@
             document.getElementById('close-info').onclick = () => {
                 document.getElementById('info').classList.add('hide')
                 const infoContent = document.querySelector('#info-content')
-                for (child of Array.from(infoContent.children)){
+                for (child of Array.from(infoContent.children)) {
                     infoContent.removeChild(child)
                 }
             }
